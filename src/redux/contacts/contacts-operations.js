@@ -13,7 +13,7 @@ const {
   deleteContactError,
 } = actions;
 
-axios.defaults.baseURL = 'https://goit-react-hw-07-phonebook-svet-ter.netlify.app/';
+axios.defaults.baseURL = 'https://goit-phonebook-api.herokuapp.com/';
 
 const fetchContacts = () => dispatch => {
   dispatch(fetchContactsRequest());

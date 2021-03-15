@@ -1,74 +1,39 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import Form from './components/Form/Form';
-import ContactsList from './components/ContactsList/ContactsList';
-import Filter from './components/Filter/Filter';
-import styles from './App.module.css';
-import { CSSTransition } from 'react-transition-group';
-import Logo from './components/Logo/Logo';
-import Error from './components/Error/Error';
+import { Switch, Route } from 'react-router-dom';
+import AppBar from './components/AppBar';
+import { Component, Suspense, lazy } from 'react';
+import authOperations from './redux/auth/auth-operations';
 import { connect } from 'react-redux';
-import contactsOperations from './redux/contacts/contacts-operations';
-import contactsSelectors from './redux/contacts/contacts-selectors';
+import PrivateRoute from './components/PrivateRoute';
+import PublicRoute from './components/PublicRoute';
 
-class App extends React.Component {
-  static propTypes = {
-    message: PropTypes.string,
-  };
+const HomeView = lazy(() => import('./views/HomeView'));
+const LoginView = lazy(() => import('./views/LoginView'));
+const RegisterView = lazy(() => import('./views/RegisterView'));
+const ContactsView = lazy(() => import('./views/ContactsView'));
 
-  state = {
-    message: '',
-  };
-
+class App extends Component {
   componentDidMount() {
-    this.props.fetchContacts();
+    this.props.onGetCurrentUser();
   }
-
-  handleSubmit = message => {
-    this.setState({ message });
-  };
-
   render() {
-    const { message } = this.state;
-    const { contacts, loading } = this.props;
     return (
       <>
-        <CSSTransition
-          in={message}
-          timeout={250}
-          classNames={{
-            enter: styles.errorEnter,
-            enterActive: styles.errorEnterActive,
-            exit: styles.errorExit,
-            exitActive: styles.errorExitActive,
-          }}
-          unmountOnExit
-        >
-          <Error message={message} />
-        </CSSTransition>
-        <CSSTransition in={true} appear={true} timeout={500} classNames={styles} unmountOnExit>
-          <Logo />
-        </CSSTransition>
-        <Form messageSubmit={this.handleSubmit} />
-        <CSSTransition in={contacts.length > 0} timeout={250} classNames={styles} unmountOnExit>
-          <h2 className={styles.subtitle}>Contacts</h2>
-        </CSSTransition>
-        <CSSTransition in={contacts.length > 1} timeout={250} classNames={styles} unmountOnExit>
-          <Filter />
-        </CSSTransition>
-        {loading ? <h1>Загружаем...</h1> : <ContactsList />}
+        <AppBar />
+        <Suspense fallback={<h1>Загружаем...</h1>}>
+          <Switch>
+            <Route exact path='/' component={HomeView} />
+            <PublicRoute path='/register' restricted component={RegisterView} redirectTo='/' />
+            <PublicRoute path='/login' restricted component={LoginView} redirectTo='/' />
+            <PrivateRoute path='/contacts' component={ContactsView} redirectTo='/login' />
+          </Switch>
+        </Suspense>
       </>
     );
   }
 }
 
-const mapStateToProps = state => ({
-  contacts: contactsSelectors.getContacts(state),
-  loading: contactsSelectors.getLoading(state),
-});
+const mapDispatchToProps = {
+  onGetCurrentUser: authOperations.getCurrentUser,
+};
 
-const mapDispatchToProps = dispatch => ({
-  fetchContacts: () => dispatch(contactsOperations.fetchContacts()),
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(App);
+export default connect(null, mapDispatchToProps)(App);

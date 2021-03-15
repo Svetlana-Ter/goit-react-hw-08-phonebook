@@ -47,3 +47,13 @@
   transform: translateX(100%);
   transition: all 250ms ease-in;
 }
+
+.form {
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+}
+
+form .authInput {
+  margin-bottom: 20px;
+}
